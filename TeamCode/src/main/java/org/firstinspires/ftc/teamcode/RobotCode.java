@@ -33,7 +33,11 @@ public class RobotCode extends OpMode {
     double leftStickY;
 
     ElapsedTime timer = new ElapsedTime();
-    enum State {IDLE, LAUNCHING}
+    enum State {IDLE, LAUNCHING, STOPPING}
+    boolean prevA = false;
+
+    State state = State.IDLE;
+
 
     @SuppressLint("DefaultLocale")
     @Override
@@ -68,10 +72,10 @@ public class RobotCode extends OpMode {
     @Override
     public void loop() {
         // check if we've changed from !pressed to pressed
-        boolean isNewButtonPressA = !is_A_Pressed && gamepad1.a;
+        is_A_Pressed = !prevA && gamepad1.a;
 
         // set new a button state
-        is_A_Pressed = gamepad1.a;
+        prevA = gamepad1.a;
 
         // Setting up values for driving forwards, laterally, and turning
         double drive = -gamepad1.left_stick_y;
@@ -87,33 +91,31 @@ public class RobotCode extends OpMode {
         rightFrontPerp.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
 
+        if (is_A_Pressed && state == State.IDLE) {
+            state = State.LAUNCHING;
+        }
+
+        switch (state) {
+            case LAUNCHING:
+                launcher.setPower(1);
+                leftFeeder.setPower(1);
+                rightFeeder.setPower(1);
+                timer.reset();
+                break;
+            case STOPPING:
+                launcher.setPower(0);
+                leftFeeder.setPower(0);
+                rightFeeder.setPower(0);
+            case IDLE:
+                break;
+        }
+
         if (leftBump) {
             leftFront.setPower(0.5);
             leftBackPar.setPower(0.5);
             rightFrontPerp.setPower(0.5);
             rightBack.setPower(0.5);
         }
-
-        if (isNewButtonPressA) {
-            // start timer
-            timer.reset();
-        }
-
-        if (is_A_Pressed) {
-            // Use time from earlier to keep checking against the present time, if 1 second has passed stop launching
-//            if (timer.seconds() >= 1.0) {
-//                is_A_Pressed = false;
-//            } else {
-//                launch(true);
-//            }
-
-        }
-
-    }
-
-    // sets button states
-    private void checkButtons() {
-
     }
 
     public void launch(boolean isLaunch) {
