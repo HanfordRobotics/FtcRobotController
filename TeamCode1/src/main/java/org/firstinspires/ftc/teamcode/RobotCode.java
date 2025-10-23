@@ -5,8 +5,6 @@ import android.annotation.SuppressLint;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
@@ -19,8 +17,6 @@ public class RobotCode extends OpMode {
     DcMotor feeder;
     DcMotor feeder2; // This is the 2nd ball from the intake
     DcMotor launcher;
-    DcMotor launcher2;
-    Servo servo;
     boolean is_A_Pressed;
     boolean is_Y_Pressed;
     boolean is_X_Pressed;
@@ -33,6 +29,7 @@ public class RobotCode extends OpMode {
     double rightStickY;
     double leftStickX;
     double leftStickY;
+
     ElapsedTime timer = new ElapsedTime();
     enum State {IDLE, LAUNCHING, STOPPING}
     boolean prevA = false;
@@ -49,10 +46,8 @@ public class RobotCode extends OpMode {
         leftBackPar = hardwareMap.get(DcMotor.class, "leftBackPar");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
         feeder = hardwareMap.get(DcMotor.class, "feeder");
-        feeder2 = hardwareMap.get(DcMotor.class, "feeder2");
+        feeder = hardwareMap.get(DcMotor.class, "feeder2");
         launcher = hardwareMap.get(DcMotor.class, "launcher");
-        launcher2 = hardwareMap.get(DcMotor.class, "launcher2");
-        servo = hardwareMap.get(Servo.class, "servo");
 
         leftBump = gamepad1.left_bumper;
         rightBump = gamepad1.right_bumper;
@@ -68,15 +63,12 @@ public class RobotCode extends OpMode {
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Motor direction
-        leftFront.setDirection(DcMotor.Direction.FORWARD);
+        leftFront.setDirection(DcMotor.Direction.REVERSE);
         leftBackPar.setDirection(DcMotor.Direction.REVERSE);
         rightFrontPerp.setDirection(DcMotor.Direction.FORWARD);
         rightBack.setDirection(DcMotor.Direction.FORWARD);
-        feeder2.setDirection(DcMotor.Direction.REVERSE);
-        feeder.setDirection(DcMotor.Direction.FORWARD);
 
         telemetry.addData("Status", "Initialized");
-        //telemetry.addData("State",state);
     }
 
     @Override
@@ -103,37 +95,23 @@ public class RobotCode extends OpMode {
 
         
 
-        if (is_A_Pressed && (state == State.IDLE || state == State.STOPPING)) {
+        if (is_A_Pressed && state == State.IDLE) {
             state = State.LAUNCHING;
-        }else if (is_B_Pressed && state == State.LAUNCHING){
-            state = State.STOPPING;
         }
 
-        // Servo control hub at port 0
         switch (state) {
             case LAUNCHING:
-                launcher.setPower(-0.5);
-                launcher2.setPower(0.5);
-                feeder.setPower(-1.0);
-                feeder2.setPower(-1.0);
-                //servo.setPosition(1.0);
+                launcher.setPower(1);
+                feeder.setPower(1);
+                feeder2.setPower(1);
                 timer.reset();
                 break;
             case STOPPING:
-                launcher.setPower(0.0);
-                launcher2.setPower(0.0);
-                feeder.setPower(0.0);
-                feeder2.setPower(0.0);
-                //servo.setPosition(0.5);
+                launcher.setPower(0);
+                feeder.setPower(0);
+                feeder2.setPower(0);
             case IDLE:
                 break;
-        }
-
-        if (is_Y_Pressed) {
-//            servo.setPosition(1.0);
-            is_Y_Pressed = false;
-        } else {
-            //servo.setPosition(-0.5);
         }
 
         if (leftBump) {
