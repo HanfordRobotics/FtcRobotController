@@ -34,7 +34,9 @@ public class RobotCode extends OpMode {
     double leftStickX;
     double leftStickY;
     ElapsedTime timer = new ElapsedTime();
-    enum State {IDLE, LAUNCHING, STOPPING}
+
+    enum State {IDLE, INTAKING, LAUNCHING, STOPPING}
+
     boolean prevA = false;
 
     State state = State.IDLE;
@@ -66,7 +68,8 @@ public class RobotCode extends OpMode {
         rightFrontPerp.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBackPar.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
+        launcher2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         // Motor direction
         leftFront.setDirection(DcMotor.Direction.FORWARD);
         leftBackPar.setDirection(DcMotor.Direction.REVERSE);
@@ -76,73 +79,100 @@ public class RobotCode extends OpMode {
         feeder.setDirection(DcMotor.Direction.FORWARD);
 
         telemetry.addData("Status", "Initialized");
-        //telemetry.addData("State",state);
+
+
     }
 
     @Override
     public void loop() {
         // check if we've changed from !pressed to pressed
-        is_A_Pressed = !prevA && gamepad1.a;
+        //is_A_Pressed = !prevA && gamepad1.a;
 
         // set new a button state
-        prevA = gamepad1.a;
+        // prevA = gamepad1.a;
 
         // Setting up values for driving forwards, laterally, and turning
         double drive = -gamepad1.left_stick_y;
         double turn = gamepad1.right_stick_x;
         double lateral = gamepad1.left_stick_x;
-        double leftFrontPower = drive + lateral + turn;
-        double rightFrontPower = drive - lateral - turn;
-        double leftBackPower = drive - lateral + turn;
-        double rightBackPower = drive + lateral - turn;
+        double leftFrontPower = (drive + lateral + turn)*(1-gamepad1.left_trigger);
+        double rightFrontPower = (drive - lateral - turn)*(1-gamepad1.left_trigger);
+        double leftBackPower = (drive - lateral + turn)*(1-gamepad1.left_trigger);
+        double rightBackPower = (drive + lateral - turn)*(1-gamepad1.left_trigger);
         // Give motors the power values from above
         leftFront.setPower(leftFrontPower);
         leftBackPar.setPower(leftBackPower);
         rightFrontPerp.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
 
-        
 
-        if (is_A_Pressed && (state == State.IDLE || state == State.STOPPING)) {
-            state = State.LAUNCHING;
-        }else if (is_B_Pressed && state == State.LAUNCHING){
-            state = State.STOPPING;
+        if (gamepad1.a) {
+            //state = State.LAUNCHING;
+            launcher.setPower(-.1);
+            launcher2.setPower(.1);
+            feeder.setPower(-1.0);
+            feeder2.setPower(-1.0);
+            //servo.setPosition(1.0);
+            timer.reset();
         }
-
-        // Servo control hub at port 0
-        switch (state) {
-            case LAUNCHING:
-                launcher.setPower(-0.5);
-                launcher2.setPower(0.5);
+        if (gamepad1.b) {
+            // state = State.STOPPING;
+            launcher.setPower(0.0);
+            launcher2.setPower(0.0);
+            feeder.setPower(0.0);
+            feeder2.setPower(0.0);
+        }
+        if (gamepad1.x) {
+            //state = State.INTAKING;
+            launcher.setPower(0);
+            launcher2.setPower(0);
+            feeder2.setPower(-1.0);
+        }
+        if (gamepad1.y) {
+                launcher.setPower(0);
+                launcher2.setPower(0);
                 feeder.setPower(-1.0);
-                feeder2.setPower(-1.0);
-                //servo.setPosition(1.0);
-                timer.reset();
-                break;
-            case STOPPING:
-                launcher.setPower(0.0);
-                launcher2.setPower(0.0);
-                feeder.setPower(0.0);
-                feeder2.setPower(0.0);
-                //servo.setPosition(0.5);
-            case IDLE:
-                break;
-        }
+            }
 
-        if (is_Y_Pressed) {
+            // Servo control hub at port 0
+            //switch (state) {
+            //  case LAUNCHING:
+            //    launcher.setPower(-.1);
+            //  launcher2.setPower(.1);
+            //feeder.setPower(-1.0);
+            // feeder2.setPower(-1.0);
+            //servo.setPosition(1.0);
+            //timer.reset();
+            //break;
+            //case STOPPING:
+            //  launcher.setPower(0.0);
+            // launcher2.setPower(0.0);
+            // feeder.setPower(0.0);
+            // feeder2.setPower(0.0);
+            //servo.setPosition(0.5);
+            // case IDLE:
+            //    break;
+            //   case INTAKING:
+            //     launcher.setPower(0);
+            //    launcher2.setPower(0);
+            //   feeder.setPower(-1.0);
+            //  feeder2.setPower(-1.0);
+        }
+        //TODO: set servo pos correctly
+        //if (is_Y_Pressed) {
 //            servo.setPosition(1.0);
-            is_Y_Pressed = false;
-        } else {
-            //servo.setPosition(-0.5);
-        }
-
-        if (leftBump) {
-            leftFront.setPower(0.5);
-            leftBackPar.setPower(0.5);
-            rightFrontPerp.setPower(0.5);
-            rightBack.setPower(0.5);
-        }
+        //is_Y_Pressed = false;
+        //} else {
+        //servo.setPosition(-0.5);
     }
+    //hey grace this is going to spin all motors at .5 power so the robot will just move forward really slow
+    //if (leftBump) {
+    //leftFront.setPower(0.5);
+    // leftBackPar.setPower(0.5);
+    // rightFrontPerp.setPower(0.5);
+    // rightBack.setPower(0.5);
+
+
 //    public void launch(boolean isLaunch) {
 //        // TODO: Set DcMotor motor directions, may need to debug/find a better method for keeping track of time
 //        if (isLaunch) {
@@ -150,4 +180,3 @@ public class RobotCode extends OpMode {
 //            feeder.setPower(1);
 //        }
 //    }
-}
